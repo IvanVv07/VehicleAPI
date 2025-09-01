@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections;
+using Microsoft.AspNetCore.Mvc;
+using VeehicleeAPI.Models;
 
 namespace VeehicleeAPI.Controllers;
 
@@ -6,34 +8,57 @@ namespace VeehicleeAPI.Controllers;
 [ApiController]
 public class VeehicleeController : ControllerBase
 {
-    //GET:api/<VeehicleesController>
+    private static readonly List<Vehicle> Data = [];
+    //GET:api/<Veehiclees?Make=Ford&year=2025
     [HttpGet]
-    public IEnumerable<string> Get()
+    public ActionResult<IEnumerable<Vehicle>> Get(string? make, int? year)
     {
-        return new string[] {"Value 1", "Value 2"};
+       var result =Data.AsEnumerable();
+       if (string.IsNullOrWhiteSpace(make))
+       {
+           result = result.Where(v =>
+               v.Make.Contains(make, StringComparison.InvariantCultureIgnoreCase));
+       }
+
+       if (year > 0)
+       {
+           result = result.Where(v => v.Year == year);
+       }
+       return Ok(result.ToArray());
     }
-    //GET api/<VeehicleesController>/5
-    [HttpGet("{id}")]
-    public string Get(int id)
+    //GET api/Veehiclees/{id}
+    [HttpGet("{id:guid}")]
+    public ActionResult<Vehicle> Get(Guid id)
     {
-        return "value";
+        var vehicle = Data.FirstOrDefault(v => v.Id == id);
+        if (vehicle == null) return NotFound();
+        return Ok(vehicle);
     }
-    //POST api/<VeehicleesController>
+    //POST api/<Veehiclees
     [HttpPost]
-    public void Post([FromBody] string value)
+    public ActionResult<Vehicle> Creat(Vehicle vehicle)
     {
-        
+        Data.Add(vehicle);
+        return CreatedAtAction(nameof(Get), new { id = vehicle.Id }, vehicle);
     }
-    //PUT api/<VeehicleesController>/5
-    [HttpPut("{id}")]
-    public void Put(int id, [FromBody] string value)
+    //PUT api/<Veehiclees/{id}
+    [HttpPut("{id:guid}")]
+    public IActionResult Replace(Guid id, Vehicle vehicle)
     {
-        
+        var existing = Data.FirstOrDefault(v => v.Id == id);
+        if (existing == null) return NotFound();
+        existing.Make = vehicle.Make;
+        existing.Model = vehicle.Model;
+        existing.Year = vehicle.Year;
+        return NoContent();
     }
-    //DELETE api/<VeehicleesController>/5
-    [HttpDelete("{id}")]
-    public void Delete(int id)
+    //DELETE api/<Veehiclees/{id}
+    [HttpDelete("{id:guid}")]
+    public IActionResult Delete(Guid id)
     {
-        
+        var existing = Data.FirstOrDefault(v => v.Id == id);
+        if (existing == null) return NotFound();
+        Data.Remove(existing);
+        return NoContent();
     }
 }

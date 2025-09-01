@@ -6,9 +6,9 @@ public class Vehicle
 {
   public Guid Id { get; init; } = Guid.NewGuid();
   [Required, StringLength(50)]
-  public string Make { get; init; } = null!;
+  public string Make { get; set; } = null!;
   [Required, StringLength(50)]
-  public string Model { get; init; } = null!;
+  public string Model { get; set; } = null!;
   [Range(1900, 2100)]
-  public int Year { get; init; }
+  public int Year { get; set; }
 }
