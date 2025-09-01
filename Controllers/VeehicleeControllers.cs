@@ -2,39 +2,38 @@
 
 namespace VeehicleeAPI.Controllers;
 
-[Route(template: "api/[controller]")]
+[Route("api/[controller]")]
 [ApiController]
-public class VehiclesController : ControllerBase
+public class VeehicleeController : ControllerBase
 {
-    // GET: api/<VehiclesController>
+    //GET:api/<VeehicleesController>
     [HttpGet]
     public IEnumerable<string> Get()
     {
-        return new string[] { "value1", "value2" };
+        return new string[] {"Value 1", "Value 2"};
     }
-
-    // GET: api/<VehiclesController>/5
-    [HttpGet(template: "{id}")]
+    //GET api/<VeehicleesController>/5
+    [HttpGet("{id}")]
     public string Get(int id)
     {
         return "value";
     }
-
-    // POST: api/<VehiclesController>
+    //POST api/<VeehicleesController>
     [HttpPost]
     public void Post([FromBody] string value)
     {
+        
     }
-
-    // PUT: api/<VehiclesController>/5
-    [HttpPut(template: "{id}")]
+    //PUT api/<VeehicleesController>/5
+    [HttpPut("{id}")]
     public void Put(int id, [FromBody] string value)
     {
+        
     }
-
-    // DELETE: api/<VehiclesController>/5
-    [HttpDelete(template: "{id}")]
+    //DELETE api/<VeehicleesController>/5
+    [HttpDelete("{id}")]
     public void Delete(int id)
     {
+        
     }
 }
