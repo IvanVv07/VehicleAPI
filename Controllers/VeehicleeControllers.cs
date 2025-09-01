@@ -1,6 +1,6 @@
-﻿using System.Collections;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using VeehicleeAPI.Models;
+using System.Linq;
 
 namespace VeehicleeAPI.Controllers;
 
@@ -8,56 +8,70 @@ namespace VeehicleeAPI.Controllers;
 [ApiController]
 public class VeehicleeController : ControllerBase
 {
-    private static readonly List<Vehicle> Data = [];
-    //GET:api/<Veehiclees?Make=Ford&year=2025
-    [HttpGet]
-    public ActionResult<IEnumerable<Vehicle>> Get(string? make, int? year)
-    {
-       var result =Data.AsEnumerable();
-       if (string.IsNullOrWhiteSpace(make))
-       {
-           result = result.Where(v =>
-               v.Make.Contains(make, StringComparison.InvariantCultureIgnoreCase));
-       }
+    private static readonly List<Vehicle> Data = new();
 
-       if (year > 0)
-       {
-           result = result.Where(v => v.Year == year);
-       }
-       return Ok(result.ToArray());
+    // GET: api/Veehiclee?make=Ford&year=2025  (parámetros OPCIONALES)
+    [HttpGet]
+    public ActionResult<IEnumerable<Vehicle>> Get([FromQuery] string? make, [FromQuery] int? year)
+    {
+        IEnumerable<Vehicle> result = Data;
+
+        // Solo filtro por 'make' si viene con valor (evita ArgumentNullException)
+        if (!string.IsNullOrWhiteSpace(make))
+            result = result.Where(v => (v.Make ?? string.Empty)
+                .Contains(make, StringComparison.InvariantCultureIgnoreCase));
+
+        // Solo filtro por 'year' si viene con valor
+        if (year.HasValue)
+            result = result.Where(v => v.Year == year.Value);
+
+        return Ok(result.ToArray());
     }
-    //GET api/Veehiclees/{id}
+
+    // GET api/Veehiclee/{id}
     [HttpGet("{id:guid}")]
-    public ActionResult<Vehicle> Get(Guid id)
+    public ActionResult<Vehicle> GetById(Guid id)
     {
         var vehicle = Data.FirstOrDefault(v => v.Id == id);
-        if (vehicle == null) return NotFound();
-        return Ok(vehicle);
+        return vehicle is null ? NotFound() : Ok(vehicle);
     }
-    //POST api/<Veehiclees
+
+    // POST api/Veehiclee
     [HttpPost]
-    public ActionResult<Vehicle> Creat(Vehicle vehicle)
+    public ActionResult<Vehicle> Create([FromBody] Vehicle vehicle)
     {
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+        if (vehicle.Id == Guid.Empty)
+            vehicle.Id = Guid.NewGuid();
+
         Data.Add(vehicle);
-        return CreatedAtAction(nameof(Get), new { id = vehicle.Id }, vehicle);
+        // Apunta al GET by id
+        return CreatedAtAction(nameof(GetById), new { id = vehicle.Id }, vehicle);
     }
-    //PUT api/<Veehiclees/{id}
+
+    // PUT api/Veehiclee/{id}
     [HttpPut("{id:guid}")]
-    public IActionResult Replace(Guid id, Vehicle vehicle)
+    public IActionResult Replace(Guid id, [FromBody] Vehicle vehicle)
     {
         var existing = Data.FirstOrDefault(v => v.Id == id);
-        if (existing == null) return NotFound();
-        existing.Make = vehicle.Make;
+        if (existing is null) return NotFound();
+
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+        existing.Make  = vehicle.Make;
         existing.Model = vehicle.Model;
-        existing.Year = vehicle.Year;
+        existing.Year  = vehicle.Year;
         return NoContent();
     }
-    //DELETE api/<Veehiclees/{id}
+
+    // DELETE api/Veehiclee/{id}
     [HttpDelete("{id:guid}")]
     public IActionResult Delete(Guid id)
     {
         var existing = Data.FirstOrDefault(v => v.Id == id);
-        if (existing == null) return NotFound();
+        if (existing is null) return NotFound();
+
         Data.Remove(existing);
         return NoContent();
     }
